@@ -6,7 +6,8 @@ class Settings():
         self.initial_num = 50
         self.tick_time = 0 #time between updates during run mode
         
-        self.efficiency_stdev = 5
+        #Max initial energy is 723
+        self.efficiency_stdev = 10 #50 is easy, 10 is about right
         self.area_energy_cost = 30
         self.height_growth_cost = 300
         self.area_growth_cost = 20
@@ -59,10 +60,11 @@ class Settings():
                             new_energy += self.floor_light[boxy, boxx]
 
             required_sustenance = np.pi * (plant.radius_floor**2 + plant.radius_understory**2 + plant.radius_canopy**2) * self.area_energy_cost
-            print(new_energy - required_sustenance, "and", norm(plant.soil_moisture, self.efficiency_stdev).pdf(self.moisture_board[plant.x_pos, plant.y_pos]))
+            
             #Calculates plant energy with pdf centered at the 
-            plant.energy = (new_energy - required_sustenance) * (norm(plant.soil_moisture, self.efficiency_stdev).pdf(self.moisture_board[plant.x_pos, plant.y_pos]))
-        
+            plant.energy = new_energy * (norm.pdf(self.moisture_board[plant.x_pos, plant.y_pos], plant.soil_moisture, self.efficiency_stdev)/norm.pdf(plant.soil_moisture, plant.soil_moisture, self.efficiency_stdev)) - required_sustenance
+            print(plant.energy)
+
         self.understory_light = new_understory_light
         self.floor_light = new_floor_light
 
@@ -153,7 +155,7 @@ class Plant:
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.age = 0
-        self.display_color = (0,0, math.floor(255/100 * self.soil_moisture))
+        self.display_color = (0, min(255, math.floor(255/100 * self.soil_moisture)), 0)
         self.energy = None
 
     def __eq__(self, coords):
@@ -202,6 +204,9 @@ def create_seed(parent1, parent2, x, y, mutation_rate):
     '''
 
     seed_soil_moisture = np.random.normal((parent1.soil_moisture + parent2.soil_moisture)/2, mutation_rate * 20)
+    if seed_soil_moisture < 0:
+        seed_soil_moisture = 0
+
     seed_seed_production = math.ceil(np.random.normal((parent1.seed_production + parent2.seed_production)/2, mutation_rate * 10))
     if seed_seed_production < 0:
         seed_seed_production = 0

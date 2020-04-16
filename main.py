@@ -61,10 +61,15 @@ def main():
                     if not run_mode:
                         year += 1
                         year_box.characters = "Year: " + str(year)
-                        
+                        start = time.perf_counter()
                         plant_list = settings.next_year(plant_list)
+                        mid = time.perf_counter()
+
                         pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.moisture_board, run_box, step_box, restart_box, year_box, screen)
                         pygame.display.flip() 
+                        end = time.perf_counter()
+                        print("sim took:", mid-start, "pg took:", end - mid)
+
                 elif restart_box.rectangle.collidepoint(mousex, mousey):
                     sim_running = False
                     break
