@@ -1,36 +1,39 @@
-import numpy as np, random, math
+import numpy as np, random, math, time
 from scipy.stats import norm
+import matplotlib
+
 class Settings():
     def __init__(self):
-        self.min_dist = 100
-        self.initial_num = 50
+        self.min_dist = 10000
+        self.initial_num = 150
         self.tick_time = 0 #time between updates during run mode
         
         #Max initial energy is 723
-        self.efficiency_stdev = 10 #50 is easy, 10 is about right
+        self.efficiency_stdev = 20 #50 is less selective, 10 is very selective, 20 is less shocking
         self.area_energy_cost = 30
         self.height_growth_cost = 300
         self.area_growth_cost = 20
-        self.seed_cost = 10
+        self.seed_cost = 100
 
         #mutation_rate out of 1
-        self.mutation_rate = 0.1
+        self.mutation_rate = 0
 
         self.max_age = 100
         self.leaf_obscurity = 0.7
 
-        self.x_size = 300
-        self.y_size = 300
+        self.x_size = 500
+        self.y_size = 500
 
         #initial light grids
         self.understory_light = np.full((self.x_size,self.y_size), 100)
         self.floor_light = np.full((self.x_size, self.y_size), 100)
 
         #initial 
-        moisture_row = [np.arange(0, 100, 100/self.x_size)]
-        self.moisture_board = moisture_row
-        for _ in range(self.y_size-1):
-            self.moisture_board = np.append(self.moisture_board, moisture_row, axis = 0)
+        self.moisture_board = np.full((self.x_size, self.y_size),50) 
+        # moisture_row = [np.arange(0, 100, 100/self.x_size)]
+        # self.moisture_board = moisture_row
+        # for _ in range(self.y_size-1):
+        #     self.moisture_board = np.append(self.moisture_board, moisture_row, axis = 0)
 
     def update_light_boards(self, plant_list):
         '''updates light boards on the floor and understory.
@@ -62,8 +65,7 @@ class Settings():
             required_sustenance = np.pi * (plant.radius_floor**2 + plant.radius_understory**2 + plant.radius_canopy**2) * self.area_energy_cost
             
             #Calculates plant energy with pdf centered at the 
-            plant.energy = new_energy * (norm.pdf(self.moisture_board[plant.x_pos, plant.y_pos], plant.soil_moisture, self.efficiency_stdev)/norm.pdf(plant.soil_moisture, plant.soil_moisture, self.efficiency_stdev)) - required_sustenance
-            print(plant.energy)
+            plant.energy = new_energy * (norm.pdf(self.moisture_board[plant.y_pos, plant.x_pos], plant.soil_moisture, self.efficiency_stdev)/norm.pdf(plant.soil_moisture, plant.soil_moisture, self.efficiency_stdev)) - required_sustenance
 
         self.understory_light = new_understory_light
         self.floor_light = new_floor_light
@@ -112,10 +114,7 @@ class Settings():
         
         random.shuffle(male_list)
 
-        count = 0
-        for seed in male_list:
-            count += 1
-            
+        for seed in male_list:           
             if len(plant_list) < self.y_size * self.x_size:
                 random.shuffle(female_list)
                 for female in female_list:
@@ -127,12 +126,10 @@ class Settings():
                             new_y = random.randint(0, self.y_size -1)
                             if (new_y,new_x) not in plant_list:
                                 not_chosen = False
-
                         plant_list.append(create_seed(seed, female, new_x, new_y, self.mutation_rate))
                         break
             else:
                 break
-        
         return(plant_list)
 
 class Plant:
@@ -239,7 +236,7 @@ def initiate_plants(num_plants: int, y_size: int, x_size):
         
         soil_moisture = random.uniform(1,100)
         growth_height = random.randint(1,3)
-        seed_production = random.randint(1, 20)
+        seed_production = random.randint(1, 1)
 
         #need to finish
         rad_flo = random.randint(1, 30)

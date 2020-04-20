@@ -1,11 +1,12 @@
 #First Trophic Level ecology simulator
 #created by Inle Bush
 
-import pygame, sys, random, time, numpy as np, math
+import pygame, sys, random, time, numpy as np, math, matplotlib
 from scipy.stats import norm
 from pygame.locals import *
 from sim_settings import *
 from pygame_settings import *
+from plots import moisture_histogram
 
 def main():
     pygame.init()
@@ -15,6 +16,7 @@ def main():
         settings = Settings() 
         pg_sets = Pygame(settings.y_size, settings.x_size)
         plant_list = initiate_plants(settings.initial_num, settings.y_size, settings.x_size)
+        moisture_histogram(plant_list, 0)
         year = 0
         run_mode = False
         sim_running = True
@@ -61,14 +63,13 @@ def main():
                     if not run_mode:
                         year += 1
                         year_box.characters = "Year: " + str(year)
-                        start = time.perf_counter()
                         plant_list = settings.next_year(plant_list)
-                        mid = time.perf_counter()
 
                         pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.moisture_board, run_box, step_box, restart_box, year_box, screen)
                         pygame.display.flip() 
-                        end = time.perf_counter()
-                        print("sim took:", mid-start, "pg took:", end - mid)
+
+                        moisture_histogram(plant_list, year)
+                        print(year)
 
                 elif restart_box.rectangle.collidepoint(mousex, mousey):
                     sim_running = False
