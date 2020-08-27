@@ -4,36 +4,36 @@ import matplotlib
 
 class Settings():
     def __init__(self):
-        self.min_dist = 10000
+        self.min_dist = 100
         self.initial_num = 150
         self.tick_time = 0 #time between updates during run mode
         
         #Max initial energy is 723
-        self.efficiency_stdev = 20 #50 is less selective, 10 is very selective, 20 is less shocking
+        self.efficiency_stdev = 10 #50 is less selective, 10 is very selective, 20 is less shocking
         self.area_energy_cost = 30
         self.height_growth_cost = 300
         self.area_growth_cost = 20
         self.seed_cost = 100
 
         #mutation_rate out of 1
-        self.mutation_rate = 0
+        self.mutation_rate = 0.3
 
-        self.max_age = 100
-        self.leaf_obscurity = 0.7
+        self.max_age = 20
+        self.leaf_obscurity = 0.8
 
-        self.x_size = 500
-        self.y_size = 500
+        self.x_size = 300
+        self.y_size = 300
 
         #initial light grids
         self.understory_light = np.full((self.x_size,self.y_size), 100)
         self.floor_light = np.full((self.x_size, self.y_size), 100)
 
         #initial 
-        self.moisture_board = np.full((self.x_size, self.y_size),50) 
-        # moisture_row = [np.arange(0, 100, 100/self.x_size)]
-        # self.moisture_board = moisture_row
-        # for _ in range(self.y_size-1):
-        #     self.moisture_board = np.append(self.moisture_board, moisture_row, axis = 0)
+        # self.ph_board = np.full((self.x_size, self.y_size),50) 
+        ph_row = [np.concatenate([np.full((int(self.x_size / 2), 1),25), np.full((int(self.x_size / 2), 1), 75)])]
+        self.ph_board = ph_row
+        for _ in range(self.y_size-1):
+            self.ph_board = np.append(self.ph_board, ph_row, axis = 0)
 
     def update_light_boards(self, plant_list):
         '''updates light boards on the floor and understory.
@@ -65,7 +65,7 @@ class Settings():
             required_sustenance = np.pi * (plant.radius_floor**2 + plant.radius_understory**2 + plant.radius_canopy**2) * self.area_energy_cost
             
             #Calculates plant energy with pdf centered at the 
-            plant.energy = new_energy * (norm.pdf(self.moisture_board[plant.y_pos, plant.x_pos], plant.soil_moisture, self.efficiency_stdev)/norm.pdf(plant.soil_moisture, plant.soil_moisture, self.efficiency_stdev)) - required_sustenance
+            plant.energy = new_energy * (norm.pdf(self.ph_board[plant.y_pos, plant.x_pos], plant.soil_ph, self.efficiency_stdev)/norm.pdf(plant.soil_ph, plant.soil_ph, self.efficiency_stdev)) - required_sustenance
 
         self.understory_light = new_understory_light
         self.floor_light = new_floor_light
@@ -133,10 +133,10 @@ class Settings():
         return(plant_list)
 
 class Plant:
-    def __init__(self, soil_moisture, seed_production, growth_height, max_rad_flo, max_rad_und, max_rad_can, gender:bool, x_pos = None , y_pos = None):
+    def __init__(self, soil_ph, seed_production, growth_height, max_rad_flo, max_rad_und, max_rad_can, gender:bool, x_pos = None , y_pos = None):
         
         #Genetic Information
-        self.soil_moisture = soil_moisture
+        self.soil_ph = soil_ph
         self.seed_production = seed_production  
         self.growth_height = growth_height
         self.max_rad_flo = max_rad_flo
@@ -152,7 +152,7 @@ class Plant:
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.age = 0
-        self.display_color = (0, min(255, math.floor(255/100 * self.soil_moisture)), 0)
+        self.display_color = (0, min(255, math.floor(255/100 * self.soil_ph)), 0)
         self.energy = None
 
     def __eq__(self, coords):
@@ -168,7 +168,7 @@ class Plant:
 
     def check_viable_mate(self, min_dist, mate):
         '''Returns whether two plants can mate(are of the same species)'''
-        dist_to_mate = (self.soil_moisture - mate.soil_moisture)**2 + ((self.growth_height - mate.growth_height)*100/3)**2 + (self.seed_production - mate.seed_production)**2
+        dist_to_mate = (self.soil_ph - mate.soil_ph)**2 + ((self.growth_height - mate.growth_height)*100/3)**2 + (self.seed_production - mate.seed_production)**2
         if dist_to_mate <= min_dist:
             return True
         return False
@@ -200,9 +200,9 @@ def create_seed(parent1, parent2, x, y, mutation_rate):
     parents variables is the mean and the mutation_rate is the standard deviation
     '''
 
-    seed_soil_moisture = np.random.normal((parent1.soil_moisture + parent2.soil_moisture)/2, mutation_rate * 20)
-    if seed_soil_moisture < 0:
-        seed_soil_moisture = 0
+    seed_soil_ph = np.random.normal((parent1.soil_ph + parent2.soil_ph)/2, mutation_rate * 20)
+    if seed_soil_ph < 0:
+        seed_soil_ph = 0
 
     seed_seed_production = math.ceil(np.random.normal((parent1.seed_production + parent2.seed_production)/2, mutation_rate * 10))
     if seed_seed_production < 0:
@@ -222,7 +222,7 @@ def create_seed(parent1, parent2, x, y, mutation_rate):
     if seed_rad_can <1:
         seed_rad_can = 1
 
-    seed = Plant(seed_soil_moisture, seed_seed_production, seed_growth_height, seed_rad_flo, seed_rad_und, seed_rad_can, bool(random.getrandbits(1)), x, y) 
+    seed = Plant(seed_soil_ph, seed_seed_production, seed_growth_height, seed_rad_flo, seed_rad_und, seed_rad_can, bool(random.getrandbits(1)), x, y) 
     return seed 
 
 
@@ -234,9 +234,9 @@ def initiate_plants(num_plants: int, y_size: int, x_size):
     
     for _ in range(num_plants):
         
-        soil_moisture = random.uniform(1,100)
+        soil_ph = random.uniform(1,100)
         growth_height = random.randint(1,3)
-        seed_production = random.randint(1, 1)
+        seed_production = random.randint(1, 5)
 
         #need to finish
         rad_flo = random.randint(1, 30)
@@ -245,7 +245,7 @@ def initiate_plants(num_plants: int, y_size: int, x_size):
         x = x_list.pop()
         y = y_list.pop()
 
-        plant_list.append(Plant(soil_moisture, seed_production, growth_height, rad_flo, rad_und, rad_can, bool(random.getrandbits(1)),x, y))
+        plant_list.append(Plant(soil_ph, seed_production, growth_height, rad_flo, rad_und, rad_can, bool(random.getrandbits(1)),x, y))
         
     return plant_list
         
