@@ -6,7 +6,7 @@ from scipy.stats import norm
 from pygame.locals import *
 from sim_settings import *
 from pygame_settings import *
-from plots import moisture_histogram
+from plots import ph_histogram, seed_by_time
 
 def main():
     pygame.init()
@@ -16,10 +16,14 @@ def main():
         settings = Settings() 
         pg_sets = Pygame(settings.y_size, settings.x_size)
         plant_list = initiate_plants(settings.initial_num, settings.y_size, settings.x_size)
-        moisture_histogram(plant_list, 0)
         year = 0
         run_mode = False
         sim_running = True
+        
+        #ph_histogram(plant_list, year)
+        seed_productions = []
+        years = []
+
 
         #Initializes Pygame
         mousex = 0
@@ -33,7 +37,7 @@ def main():
         restart_box = text("Restart", pg_sets.font_size1, pg_sets.text_color, pg_sets.button_color, pg_sets.restart_center, pg_sets.top_center, screen)
         year_box = text("Year: 0", pg_sets.font_size2, pg_sets.white, pg_sets.black, pg_sets.year_center, pg_sets.bottom_center, screen)
         
-        pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.moisture_board, run_box, step_box, restart_box, year_box, screen)
+        pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.ph_board, run_box, step_box, restart_box, year_box, screen)
         pygame.display.flip()
 
         #Main Loop
@@ -65,10 +69,14 @@ def main():
                         year_box.characters = "Year: " + str(year)
                         plant_list = settings.next_year(plant_list)
 
-                        pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.moisture_board, run_box, step_box, restart_box, year_box, screen)
+                        pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.ph_board, run_box, step_box, restart_box, year_box, screen)
                         pygame.display.flip() 
+                        # for plant in plant_list:
+                        #     seed_productions.append(plant.seed_production)
+                        #     years.append(year)
 
-                        moisture_histogram(plant_list, year)
+                        # seed_by_time(seed_productions, years)
+                        ph_histogram(plant_list, year)
                         print(year)
 
                 elif restart_box.rectangle.collidepoint(mousex, mousey):
@@ -83,7 +91,7 @@ def main():
                     year_box.characters = "Year: " + str(year)
 
                     plant_list = settings.next_year(plant_list)
-                    pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.moisture_board, run_box, step_box, restart_box, year_box, screen)                    
+                    pg_sets.draw_board(plant_list, settings.floor_light, settings.understory_light, settings.ph_board, run_box, step_box, restart_box, year_box, screen)                    
                     pygame.display.flip() 
 
 if __name__ == "__main__":
