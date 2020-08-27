@@ -55,7 +55,7 @@ class Pygame:
         self.restart_center = self.run_center + self.gap_size + self.board_width
         self.year_center = self.step_center 
 
-    def draw_board(self, plant_list, floor_light, understory_light, soil_moisture, run_box, step_box, restart_box, year_box, screen): 
+    def draw_board(self, plant_list, floor_light, understory_light, soil_ph, run_box, step_box, restart_box, year_box, screen): 
         '''resets screen with new boards'''
         screen.fill(self.bg_color)
 
@@ -70,8 +70,8 @@ class Pygame:
                 #bottom middle (understory light)
                 pygame.draw.rect(screen, (math.floor(self.light_hue * understory_light[boxy, boxx]/100), math.floor(self.light_hue * understory_light[boxy, boxx]/100), 0),(left + self.margin_width + self.gap_size + self.board_width, top, self.tile_size, self.tile_size))
                 
-                #bottom right (soil moisture)
-                pygame.draw.rect(screen, (0,0, math.floor(255/100 * soil_moisture[boxy, boxx])) ,(left + self.margin_width + 2*self.gap_size + 2*self.board_width, top, self.tile_size, self.tile_size))
+                #bottom right (soil ph)
+                pygame.draw.rect(screen, (0,0, math.floor(255/100 * soil_ph[boxy, boxx])) ,(left + self.margin_width + 2*self.gap_size + 2*self.board_width, top, self.tile_size, self.tile_size))
 
         #Top left background
         pygame.draw.rect(screen, self.floor_bg, (self.margin_width, self.top_margin_height,self.board_width, self.board_height))
@@ -150,4 +150,3 @@ class text: #used for all text boxes
 
     #     self.rectangle = text_object.get_rect()
     #     self.rectangle.center = (self.x_cent, self.y_cent)
-
