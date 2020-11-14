@@ -1,2 +1,2 @@
 # More Information
-Read [the extended essay pdf](/inle_EE.pdf) for a complete discription and use.
+Read [the extended essay pdf](/Inle_EE.pdf) for a complete discription and use.
